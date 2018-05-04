@@ -1,0 +1,108 @@
+################
+################
+##            ##
+##  Maturity  ##
+##            ##
+################
+################
+
+
+years<-c(1991:2020)
+age<-c(1:8)
+
+## specifies the age and period which we wish to calculate values for
+
+m.alpha.range<-0.5
+m.beta.range<-0.5
+
+## specifies control variables for calculation
+
+m.alpha.rand<-runif(n=length(years)+length(age), min=0, max=1)
+
+m.beta.rand<-runif(n=length(years)+length(age), min=0, max=1)
+
+## creates vectors of correct length of uniformly distributed values
+## between 0 and 1
+
+
+
+calculate.maturities<-function(fish.age, rand.alpha, rand.beta, range.alpha,
+ range.beta, period){
+
+## sets up function to calculate weights
+
+maturity.matrix<-matrix(nrow=length(period)+length(fish.age), ncol=length(fish.age))
+
+a.m.y.vector<-vector(length=((length(period))+(length(fish.age))))
+b.m.y.vector<-vector(length=((length(period))+(length(fish.age))))
+
+## creates vectors and matrix to recieve values
+
+for (i in 1:(length(period)+length(fish.age))){
+
+## creates loop to calculate constants for each year class
+
+a.m.y<-5+(range.alpha*((2*rand.alpha[i])-1))
+
+b.m.y<-1.65+(range.beta*((2*rand.beta[i])-1))
+
+
+for (j in 1:length(fish.age)){
+
+maturity.matrix[i,j]<- 1/(1+(exp(-b.m.y*(fish.age[j]-a.m.y))))
+
+## selects the appropriate constants for that year and calculates
+## weight for a given age and year
+
+}
+
+}
+
+return(maturity.matrix)
+
+}
+
+species.maturity<-calculate.maturities(age, m.alpha.rand, m.beta.rand, m.alpha.range, m.beta.range, years)
+
+rownames(species.maturity)<-c((min(years)-length(age)):max(years))
+colnames(species.maturity)<-c(min(age):max(age))
+
+species.maturity
+
+
+## applies the function to our data and returns the results
+
+
+
+
+
+maturity.age.year<-function(period, fish.age, target){
+
+## creates a new function to sort cohorts into years
+
+maturity.classes<-matrix(nrow=length(period), ncol=length(fish.age))
+
+## creates new matrix to store data
+
+for (i in (1:length(period))){
+
+for (j in (1:length(fish.age))){
+
+maturity.classes[i,j]<-target[(i+(length(fish.age)-1))-(j-1), j]
+
+## stores maturity of particular age/year of fish in appropriate box
+
+}
+
+}
+return(maturity.classes)
+}
+
+maturity.at.age.by.year<-maturity.age.year(years,age, species.maturity)
+
+rownames(maturity.at.age.by.year)<-c(years)
+colnames(maturity.at.age.by.year)<-c(age)
+
+maturity.at.age.by.year
+
+## applies this function to our simulated data to generate maturities
