@@ -1,0 +1,241 @@
+
+#########################
+#########################
+##                     ##
+##  Fishing Mortality  ##
+##                     ##
+#########################
+#########################
+
+###################
+## Catchability  ##
+###################
+
+q.zero<- 0.08
+q.one<-0.4
+B.y<-12000
+years<-c(1991:2020)
+cat.sigma<-0.2
+cat.trend<-0.02
+
+## specifies variables we're going to use
+
+catchability<-function(q0, q1, unfished.SSb, period, cs, ct){
+
+## creates a function to calculate catchability
+
+cat.epsilon<-runif(length(period), min=0, max=1)
+q.y<-vector(length=length(period))
+
+for (i in 1:(length(period))){
+
+q.y[i]<-q0*(unfished.SSb^(q1-1))*exp((ct*(period[i]-2001))+cs*cat.epsilon[i]-(0.5*cs^2))
+
+## calculates q.y based on random, uniformly distributed values
+
+}
+
+return(q.y)
+
+}
+
+species.catchability<-catchability(q.zero, q.one, B.y, years, cat.sigma, cat.trend)
+
+## runs the function and assigns it
+
+
+
+#############
+## Effort  ##
+#############
+
+years<-c(1991:2020)
+age<-c(1:8)
+effort.switch.range<-7
+nu.e.range<-0.25
+E.zero<-4000
+
+## assigns the values we've specified
+
+effort.switch.year<-max(years)-(round(effort.switch.range*(runif(1,min=0,max=1))))
+
+## creates a year in which effort values will switch
+
+E.one<-ifelse(years<=effort.switch.year, 0.8, 1.2)
+
+## creates vector of effort multiplier, wrt effort switch year
+
+epsilon.effort<-runif(length(years), min=0, max=1)
+
+nu.effort<-1+(nu.e.range*((2*epsilon.effort)-1))
+
+total.effort<-vector(length=length(years))
+
+for (i in (1:length(years))){
+
+total.effort[i]<-E.zero*E.one[i]*nu.effort[i]
+
+}
+
+## calculates total effort based on our values and a uniformly distributed variable
+
+total.effort
+
+
+
+##################
+## Selectivity  ##
+##################
+
+
+years<-c(1991:2020)
+age<-c(1:8)
+s.alpha.range<-1
+switch.range<-7
+s.sigma<-0.1
+
+
+## specifies the age and period which we wish to calculate values for
+
+selectivity.switch.year<-max(years)-(round(switch.range*(runif(1,min=0,max=1)))+0.01)
+
+## designates year in which selectivity will change (in response to technical measures etc.)
+
+expected.alpha<-vector(length=length(years))
+
+expected.beta<-vector(length=length(years))
+
+for (i in 1:(length(years))){
+
+if (years[i]<=selectivity.switch.year)
+        expected.alpha[i]<-4
+  else 
+        expected.alpha[i]<-4+(2*(1-exp(-0.45*(years[i]-selectivity.switch.year))))
+
+## assigns expected values of alpha, based on selectivity switch year
+
+
+if (years[i]<=selectivity.switch.year)
+
+       expected.beta[i]<-0.6
+ 
+  else
+
+       expected.beta[i]<-0.8
+}
+
+## assigns expected values of beta in the same way
+
+
+s.alpha.rand<-runif(length(years), min=0, max=1)
+
+s.epsilon.rand<-rnorm(length(years), mean=0, sd=1)
+
+## creates two vectors of uniformly distributed values
+
+alpha.s.y<-vector(length=(length(years)))
+
+for (i in 1:(length(years))){
+
+alpha.s.y[i]<-expected.alpha[i]+(s.alpha.range*((2*s.alpha.rand[i])-1))
+
+}
+
+
+selectivity<-matrix(nrow=length(years), ncol=length(age))
+
+for (i in (1:length(years))){
+
+for (j in (1:length(age))){
+
+selectivity[i,j]<-(1/(1+exp(-expected.beta[i]*(age[j]-expected.alpha[i]))))*(exp(s.sigma*s.epsilon.rand[i]-(0.5*s.sigma^2)))
+
+}}
+
+
+selectivity[selectivity>1] <- 1
+
+## calculates selectivity based on the values we have assigned
+
+
+
+fishing.mortality<-selectivity*species.catchability*total.effort
+
+## calculates fishing mortality as a function of selectivity, effort and catchability
+
+
+rownames(fishing.mortality)<-years
+colnames(fishing.mortality)<-age
+
+fishing.mortality
+
+
+
+
+#########################
+#########################
+##                     ##
+##  Natural Mortality  ##
+##                     ##
+#########################
+#########################
+
+nat.mort.range<-0.5
+max.age<-8
+years<-c(1991:2020)
+n.values<-c(0.8, 0.35, 0.25, 0.2, 0.2, 0.2, 0.2, 0.2)
+
+## specifies control variables and our natural mortality estimates
+
+
+
+
+sim.nat.mort<-function(oldest, period, range, base, rand){
+
+## sets up function to caluclate natural mortalities
+
+    rand<-runif(n=50, min=1-range, max=1+range)
+    
+## creates vector of 50 values, uniformly distributed 
+## between 1-Mrange and 1+Mrange
+
+    sim.morts<-matrix(nrow=length(period), ncol=oldest)
+    colnames(sim.morts)<-c(1:(oldest))
+    rownames(sim.morts)<-c(period)
+    
+## sets up matrix to store mortality values
+
+for (i in (1:length(period))){
+
+    for (j in (1:oldest)){
+
+        sim.morts[i,j]<-base[j]*(range*(rand[i]-1)+1)
+
+    }
+
+}
+
+return(sim.morts)
+
+}
+
+## calculates permutations on natural mortality over period
+
+
+simulated.M<-sim.nat.mort(max.age, years, nat.mort.range, n.values)
+
+simulated.M
+
+
+
+
+#########################
+## Combined Mortality  ##
+#########################
+
+TOTAL.MORTALITY<-simulated.M+fishing.mortality
+
+## combines natural and fishing mortality
+
+
+TOTAL.MORTALITY
