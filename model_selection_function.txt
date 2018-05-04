@@ -1,0 +1,48 @@
+######################
+## Model Selection  ##
+######################
+
+model.selection<-function(){
+
+## creates function to select model at random
+
+model.parameter<-round(runif(1,min=0.51, max=7.5))
+
+## a random value between 1 and 7
+
+if (model.parameter==1)
+
+    model.choice<-"Ricker"
+
+if (model.parameter==2)
+
+    model.choice<-"Beverton-Holt"
+
+if (model.parameter==3)
+
+    model.choice<-"Power"
+
+if (model.parameter==4)
+
+    model.choice<-"Saila-Lorda"
+
+if (model.parameter==5)
+
+    model.choice<-"Changepoint"
+
+if (model.parameter==6)
+
+    model.choice<-"Shepherd"
+
+if (model.parameter==7)
+
+    model.choice<-"Mixed"
+
+return(model.choice)
+
+}
+
+## gives model name based on random value
+
+
+model<-model.selection()
