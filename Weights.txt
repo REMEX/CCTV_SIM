@@ -1,0 +1,205 @@
+#####################
+##  Genrate Stock  ##
+##     Weights     ##
+#####################
+
+w.inf<-5
+l.inf<-50
+
+## Weight(inf)=5
+
+years<-c(1991:2020)
+age<-c(1:8)
+
+## specifies the age and period which we wish to calculate values for
+
+w.kappa.range<-0.15
+w.beta.range<-1.0
+
+l.kappa.range<-0.1
+l.beta.range<-0.05
+
+## specifies control variables for calculation
+
+w.kappa.rand<-runif(n=length(years)+length(age), min=0, max=1)
+
+w.beta.rand<-runif(n=length(years)+length(age), min=0, max=1)
+
+l.kappa.rand<-runif(n=length(years)+length(age), min=0, max=1)
+
+l.beta.rand<-runif(n=length(years)+length(age), min=0, max=1)
+
+
+## creates vectors of correct length of uniformly distributed values
+## between 0 and 1
+
+
+
+calculate.weights<-function(win, fish.age, rand.kappa, rand.beta, range.kappa, range.beta, period){
+
+## sets up function to calculate weights
+
+weight.matrix<-matrix(nrow=length(period)+length(fish.age), ncol=length(fish.age))
+k.w.y.vector<-vector(length=((length(period))+(length(fish.age))))
+b.w.y.vector<-vector(length=((length(period))+(length(fish.age))))
+
+## creates vectors and matrix to recieve values
+
+for (i in 1:(length(period)+length(fish.age))){
+
+## creates loop to calculate constants for each year class
+
+for (j in 1:length(fish.age)){
+
+k.w.y<-0.65+w.kappa.range*((2*rand.kappa[i])-1)
+b.w.y<-3+w.beta.range*((2*rand.beta[i])-1)
+
+weight.matrix[i,j]<- win*(1-(exp(-(fish.age[j])*k.w.y)))^(b.w.y)
+
+## selects the appropriate constants for that year and calculates
+## weight for a given age and year
+
+}
+
+}
+
+return(weight.matrix)
+
+}
+
+species.weights<-calculate.weights(w.inf, age, w.kappa.rand, w.beta.rand, w.kappa.range, w.beta.range, years)
+
+rownames(species.weights)<-c((min(years)-length(age)):max(years))
+colnames(species.weights)<-c(min(age):max(age))
+
+species.weights
+
+
+## applies the function to our data and returns the results
+
+
+
+
+
+weight.age.year<-function(period, fish.age, target){
+
+## creates a new function to sort cohorts into years
+
+weight.classes<-matrix(nrow=length(period), ncol=length(fish.age))
+
+## creates new matrix to store data
+
+for (i in (1:length(period))){
+
+for (j in (1:length(fish.age))){
+
+weight.classes[i,j]<-target[(i+(length(fish.age)-1))-(j-1), j]
+
+## stores particular age/year of fish in appropriate box
+
+}
+
+}
+return(weight.classes)
+}
+
+weight.at.age.by.year<-weight.age.year(years,age, species.weights)
+
+rownames(weight.at.age.by.year)<-c(years)
+colnames(weight.at.age.by.year)<-c(age)
+
+weight.at.age.by.year
+
+## applies this function to our simulated data to generate weights
+
+
+
+
+
+
+
+
+
+
+
+
+###CALCULATE LENGTHS###
+
+
+
+calculate.lengths<-function(win, fish.age, rand.kappa, rand.beta, range.kappa, range.beta, period){
+
+## sets up function to calculate lengths
+
+length.matrix<-matrix(nrow=length(period)+length(fish.age), ncol=length(fish.age))
+k.l.y.vector<-vector(length=((length(period))+(length(fish.age))))
+b.l.y.vector<-vector(length=((length(period))+(length(fish.age))))
+
+## creates vectors and matrix to recieve values
+
+for (i in 1:(length(period)+length(fish.age))){
+
+## creates loop to calculate constants for each year class
+
+for (j in 1:length(fish.age)){
+
+k.l.y<-0.5+l.kappa.range*((2*rand.kappa[i])-1)
+b.l.y<-2+l.beta.range*((2*rand.beta[i])-1)
+
+length.matrix[i,j]<- win*(1-(exp(-(fish.age[j])*k.l.y)))^(b.l.y)
+
+## selects the appropriate constants for that year and calculates
+## length for a given age and year
+
+}
+
+}
+
+return(length.matrix)
+
+}
+
+species.lengths<-calculate.lengths(l.inf, age, l.kappa.rand, l.beta.rand, l.kappa.range, l.beta.range, years)
+
+rownames(species.lengths)<-c((min(years)-length(age)):max(years))
+colnames(species.lengths)<-c(min(age):max(age))
+
+species.lengths
+
+
+## applies the function to our data and returns the results
+
+
+
+
+
+length.age.year<-function(period, fish.age, target){
+
+## creates a new function to sort cohorts into years
+
+length.classes<-matrix(nrow=length(period), ncol=length(fish.age))
+
+## creates new matrix to store data
+
+for (i in (1:length(period))){
+
+for (j in (1:length(fish.age))){
+
+length.classes[i,j]<-target[(i+(length(fish.age)-1))-(j-1), j]
+
+## stores particular age/year of fish in appropriate box
+
+}
+
+}
+return(length.classes)
+}
+
+length.at.age.by.year<-length.age.year(years,age, species.lengths)
+
+rownames(length.at.age.by.year)<-c(years)
+colnames(length.at.age.by.year)<-c(age)
+
+length.at.age.by.year
+
+## applies this function to our simulated data to generate lengths
